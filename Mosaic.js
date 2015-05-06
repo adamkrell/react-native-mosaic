@@ -7,43 +7,83 @@
 var React = require('react-native');
 var {
   Image,
-  PixelRatio,
-  StyleSheet,
   View,
   Component,
 } = React;
 
+var defaultImage = require('image!house');
+
+var sizes = [
+  [1,1],
+  
+];
 
 class Mosaic extends Component {
   constructor(props) {
     super(props);
-    this.state = {uris: Array(4).fill(props.defaultUri)};
   }
 
   componentWillMount() {
-    var uris = this.shuffle(this.props.uris);
-    uris = uris.slice(0, 4);
+    var uris = [];
+    var imageUris = this.shuffle(this.props.uris);
+    imageUris = imageUris.slice(0, 4);
 
-    for (var i = 0; i < uris.length ; i++) {
-      this.state.uris[i] = uris[i];
+    for (var i = 0; i < imageUris.length ; i++) {
+      uris[i] = imageUris[i];
     }
+
+    this.setState({uris: uris});
   }
 
-  shuffle(array) {
-    var currentIndex = array.length, temporaryValue, randomIndex ;
+  shuffle(uris) {
+    var currentIndex = uris.length, temporaryValue, randomIndex ;
 
     while (0 !== currentIndex) {
       randomIndex = Math.floor(Math.random() * currentIndex);
       currentIndex -= 1;
-      temporaryValue = array[currentIndex];
-      array[currentIndex] = array[randomIndex];
-      array[randomIndex] = temporaryValue;
+      temporaryValue = uris[currentIndex];
+      uris[currentIndex] = uris[randomIndex];
+      uris[randomIndex] = temporaryValue;
     }
 
-    return array;
+    return uris;
+  }
+
+  createViews() {
+    var i, multiplier, width, height, images, length = this.state.uris.length;
+
+    if (this.state.uris.length === 0) {
+      return this.createImage(1, this.props.defaultUri, this.props.width, this.props.width);
+    }
+
+    multiplier = [[1, 1], [1, .5], [.5, .5], [.5, .5]];
+
+    return this.state.uris.map((uri, index) => {
+      width = this.props.width * multiplier[length - 1][0];
+      height = this.props.width * multiplier[length - 1][1];
+
+      // Logic to enable a set of three images to be able to have one image with different dimensions.
+      if (index == 2 && length == 3) {
+        width *= 2; 
+      }
+
+      return this.createImage(index, uri, width, height);
+    });
+  }
+
+  createImage(index, uri, width, height) {
+    return (
+        <Image
+          key={index}
+          source={uri}
+          width={width}
+          height={height}
+        />
+    );
   }
 
   render() {
+    var content = this.createViews();
     return (
       <View 
         style={{
@@ -54,39 +94,11 @@ class Mosaic extends Component {
           height: this.props.width,
           marginRight: 10,
         }}>
-        <Image
-          source={this.state.uris[0]}
-          width={this.props.width / 2}
-          height={this.props.width / 2}
-        />
-        <Image
-          source={this.state.uris[1]}
-          width={this.props.width / 2}
-          height={this.props.width / 2}
-        />
-        <Image
-          source={this.state.uris[2]}
-          width={this.props.width / 2}
-          height={this.props.width / 2}
-        />
-        <Image
-          source={this.state.uris[3]}
-          width={this.props.width / 2}
-          height={this.props.width / 2}
-        />
+        {content}
       </View>
     );
   }
 };
-
-var styles = StyleSheet.create({
-  cellBorder: {
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
-    // Trick to get the thinest line the device can display
-    height: 1 / PixelRatio.get(),
-    marginLeft: 4,
-  },
-});
 
 Mosaic.defaultProps = {
   width: 50,
