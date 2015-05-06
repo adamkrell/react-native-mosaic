@@ -13,11 +13,6 @@ var {
 
 var defaultImage = require('image!house');
 
-var sizes = [
-  [1,1],
-  
-];
-
 class Mosaic extends Component {
   constructor(props) {
     super(props);
